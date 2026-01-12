@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/fuel_tracker/">
+  <title>Fuel Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header style="background: #ffffff; border-bottom: 1px solid #d5deeb; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+    <h2 style="margin: 0; font-size: 1.5em;">Fuel Tracker</h2>
+    <div>
+      <span id="username-display" style="margin-right: 16px; color: #0f172a;"></span>
+      <button id="logout-btn" style="padding: 8px 16px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 6px; cursor: pointer;">Logout</button>
+    </div>
+  </header>
+  <main class="page">
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button class="tab-button active" role="tab" aria-selected="true" aria-controls="uber-view" id="tab-uber">Uber Mileage</button>
+      <button class="tab-button" role="tab" aria-selected="false" aria-controls="tracker-view" id="tab-tracker">Fuel Tracker</button>
+    </div>
+    <section class="card hidden" id="tracker-view">
+      <!-- <h1>Fuel Tracker</h1> -->
+      <form id="trip-form" class="form">
+        <div class="field">
+          <label for="vehicle">Vehicle</label>
+          <select id="vehicle" name="vehicle" required>
+            <option value="Nissan Xtrail">Nissan Xtrail</option>
+            <option value="Nissan Sentra">Nissan Sentra</option>
+            <option value="Subaru Legacy">Subaru Legacy</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="date">Date</label>
+          <input type="date" id="date" name="date" required />
+        </div>
+        <div class="field">
+          <label for="odometer">Odometer (km)</label>
+          <input type="number" id="odometer" name="odometer" step="0.1" min="0" required />
+        </div>
+        <div class="field">
+          <label for="quantity">Fuel Quantity (L)</label>
+          <input type="number" id="quantity" name="quantity" step="0.001" min="0" required />
+        </div>
+        <div class="field">
+          <label for="total">Price Total</label>
+          <div class="input-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="total" name="total" step="0.01" min="0" required />
+          </div>
+        </div>
+        <div class="field">
+          <label for="ppl">Price per Liter</label>
+          <div class="input-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="ppl" name="ppl" step="0.001" min="0" placeholder="auto-calculated if empty" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="gst">GST Paid</label>
+          <div class="input-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="gst" name="gst" step="0.01" min="0" />
+          </div>
+        </div>
+        <button type="submit">Save Trip</button>
+        <p id="status" class="status" role="status"></p>
+      </form>
+
+      <div class="table-head" style="margin-top: 32px;">
+        <h2>Fuel Purchases</h2>
+        <div class="table-actions">
+          <button id="trips-export">Export XLSX</button>
+        </div>
+      </div>
+      <div class="table-wrap table-frame">
+        <table id="trips-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Vehicle</th>
+              <th>Odometer (km)</th>
+              <th>Quantity (L)</th>
+              <th>Total</th>
+              <th>Price/L</th>
+              <th>GST Paid</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3"></td>
+              <td data-label="Total Quantity"><strong id="total-quantity">0</strong></td>
+              <td data-label="Total Price"><strong id="total-price">$0</strong></td>
+              <td></td>
+              <td data-label="Total GST"><strong id="total-gst">$0</strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="pagination" id="trips-pagination">
+        <button id="trips-prev">Prev</button>
+        <span id="trips-page-info">Page 1 of 1</span>
+        <button id="trips-next">Next</button>
+      </div>
+    </section>
+
+    <section class="card" id="uber-view">
+      <!-- <h1>Ube</h1> -->
+      <form id="mileage-form" class="form">
+        <div class="field">
+          <label for="mileage-vehicle">Vehicle</label>
+          <select id="mileage-vehicle" name="mileage-vehicle" required>
+            <option value="Nissan Xtrail">Nissan Xtrail</option>
+            <option value="Nissan Sentra">Nissan Sentra</option>
+            <option value="Subaru Legacy">Subaru Legacy</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mileage-date">Date</label>
+          <input type="date" id="mileage-date" name="mileage-date" required />
+        </div>
+        <div class="field">
+          <label>
+            <input type="radio" name="mode" value="start" checked /> Log Start Mileage
+          </label>
+          <label>
+            <input type="radio" name="mode" value="end" /> Log End Mileage
+          </label>
+        </div>
+        <div id="start-inputs" class="field">
+          <label for="start-mileage">Start Mileage (km)</label>
+          <input type="number" id="start-mileage" name="start-mileage" step="0.1" min="0" />
+        </div>
+        <div id="end-inputs" class="field hidden">
+          <label for="record-id">Select Record to Update</label>
+          <select id="record-id" name="record-id"></select>
+          <label for="end-mileage" style="margin-top: 12px;">End Mileage (km)</label>
+          <input type="number" id="end-mileage" name="end-mileage" step="0.1" min="0" />
+        </div>
+        <button type="submit">Save</button>
+        <p id="mileage-status" class="status" role="status"></p>
+      </form>
+
+      <div class="table-head" style="margin-top: 32px;">
+        <h2>Daily Records</h2>
+        <div class="table-actions">
+          <button id="mileage-export">Export XLSX</button>
+        </div>
+      </div>
+      <div class="table-wrap table-frame">
+        <table id="mileage-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Vehicle</th>
+              <th>Start (km)</th>
+              <th>End (km)</th>
+              <th>Total (km)</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+              <td colspan="4">Total Nissan Xtrail</td>
+              <td data-label="Total Distance"><strong id="total-nissan-xtrail">0</strong></td>
+              <td></td>
+              <td></td>
+            </tr>
+              <td colspan="4">Total Nissan Sentra</td>
+              <td data-label="Total Distance"><strong id="total-nissan-sentra">0</strong></td>
+              <td></td>
+              <td></td>
+            </tr>
+              <td colspan="4">Total Subaru Legacy</td>
+              <td data-label="Total Distance"><strong id="total-subaru-legacy">0</strong></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+        </table>
+      </div>
+      <div class="pagination" id="mileage-pagination">
+        <button id="mileage-prev">Prev</button>
+        <span id="mileage-page-info">Page 1 of 1</span>
+        <button id="mileage-next">Next</button>
+      </div>
+    </section>
+  </main>
+  <script src="main.js"></script>
+</body>
+</html>

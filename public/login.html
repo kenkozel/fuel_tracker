@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/fuel_tracker/">
+  <title>Fuel Tracker - Login</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .login-container {
+      max-width: 400px;
+      margin: 80px auto;
+      padding: 32px;
+      background: #ffffff;
+      border: 1px solid #d5deeb;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+    .login-container h1 {
+      text-align: center;
+      margin-bottom: 32px;
+      color: #0f172a;
+    }
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .field label {
+      font-weight: 500;
+      color: #0f172a;
+    }
+    .field input {
+      padding: 10px 12px;
+      border: 1px solid #d5deeb;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+    }
+    button {
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .status.success {
+      background: #dcfce7;
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>Login</h1>
+    <form id="auth-form" class="form">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password">
+      </div>
+      <button type="submit">Login</button>
+      <div id="status" class="status" style="display: none;"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('auth-form');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const statusEl = document.getElementById('status');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!username || !password) {
+        showStatus('Please fill in all fields', true);
+        return;
+      }
+
+      try {
+        const res = await fetch('api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showStatus(data.error || 'Login failed', true);
+          return;
+        }
+
+        showStatus('Login successful! Redirecting...', false);
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 500);
+      } catch (err) {
+        showStatus('Error: ' + err.message, true);
+      }
+    });
+
+    function showStatus(message, isError) {
+      statusEl.textContent = message;
+      statusEl.className = 'status ' + (isError ? 'error' : 'success');
+      statusEl.style.display = 'block';
+    }
+
+    // Check if already logged in
+    fetch('api/auth/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authenticated) {
+          window.location.href = 'index.html';
+        }
+      });
+  </script>
+</body>
+</html>
