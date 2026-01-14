@@ -135,7 +135,7 @@ async function fetchMileage() {
 
     // Populate the record select dropdown with incomplete records
     const recordSelect = document.getElementById('record-id');
-    recordSelect.innerHTML = '<option value="">-- Select a record --</option>';
+    recordSelect.innerHTML = '<option value="">-- Select --</option>';
     
     const totalsByVehicle = {
       'Nissan Xtrail': 0,
