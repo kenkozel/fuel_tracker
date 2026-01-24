@@ -584,15 +584,21 @@ function displayReportSummary(summary, monthInput) {
   let totalCost = 0;
   let totalQuantity = 0;
   let totalTransactions = 0;
+  let totalGst = 0;
+  let totalKm = 0;
   
   tableBody.innerHTML = summary.map(row => {
     const quantity = parseFloat(row.total_quantity) || 0;
     const cost = parseFloat(row.total_cost) || 0;
+    const gst = parseFloat(row.total_gst) || 0;
+    const km = parseFloat(row.total_km) || 0;
     const count = parseInt(row.transaction_count) || 0;
     const avgPrice = quantity > 0 ? (cost / quantity).toFixed(3) : 0;
     
     totalCost += cost;
     totalQuantity += quantity;
+    totalGst += gst;
+    totalKm += km;
     totalTransactions += count;
     
     return `
@@ -600,6 +606,8 @@ function displayReportSummary(summary, monthInput) {
         <td style="padding: 10px 8px; text-align: left; font-size: 13px;">${row.vehicle}</td>
         <td style="padding: 10px 8px; text-align: right; font-size: 13px;">${quantity.toFixed(3)}</td>
         <td style="padding: 10px 8px; text-align: right; font-size: 13px;">$${cost.toFixed(2)}</td>
+        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">$${gst.toFixed(2)}</td>
+        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">${km.toFixed(1)}</td>
         <td style="padding: 10px 8px; text-align: right; font-size: 13px;">$${avgPrice}</td>
         <td style="padding: 10px 8px; text-align: right; font-size: 13px;">${count}</td>
       </tr>
@@ -610,6 +618,8 @@ function displayReportSummary(summary, monthInput) {
   cardList.innerHTML = summary.map(row => {
     const quantity = parseFloat(row.total_quantity) || 0;
     const cost = parseFloat(row.total_cost) || 0;
+    const gst = parseFloat(row.total_gst) || 0;
+    const km = parseFloat(row.total_km) || 0;
     const count = parseInt(row.transaction_count) || 0;
     const avgPrice = quantity > 0 ? (cost / quantity).toFixed(3) : 0;
 
@@ -624,6 +634,14 @@ function displayReportSummary(summary, monthInput) {
           <div>
             <div class="label">Cost</div>
             <div class="value">$${cost.toFixed(2)}</div>
+          </div>
+          <div>
+            <div class="label">GST</div>
+            <div class="value">$${gst.toFixed(2)}</div>
+          </div>
+          <div>
+            <div class="label">KM</div>
+            <div class="value">${km.toFixed(1)}</div>
           </div>
           <div>
             <div class="label">Avg $/L</div>
@@ -643,12 +661,16 @@ function displayReportSummary(summary, monthInput) {
   // Update stats
   document.getElementById('stat-total-cost').textContent = `$${totalCost.toFixed(2)}`;
   document.getElementById('stat-total-quantity').textContent = `${totalQuantity.toFixed(3)} L`;
+  document.getElementById('stat-total-km').textContent = `${totalKm.toFixed(1)} km`;
+  document.getElementById('stat-total-gst').textContent = `$${totalGst.toFixed(2)}`;
   document.getElementById('stat-avg-price').textContent = `$${avgPricePerLiter}`;
   document.getElementById('stat-transaction-count').textContent = totalTransactions;
   
   // Update footer
   document.getElementById('footer-quantity').textContent = totalQuantity.toFixed(3);
   document.getElementById('footer-cost').textContent = `$${totalCost.toFixed(2)}`;
+  document.getElementById('footer-gst').textContent = `$${totalGst.toFixed(2)}`;
+  document.getElementById('footer-km').textContent = totalKm.toFixed(1);
   document.getElementById('footer-avg').textContent = `$${avgPricePerLiter}`;
   document.getElementById('footer-count').textContent = totalTransactions;
 }

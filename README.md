@@ -89,6 +89,7 @@ Trips:
 - `DELETE /api/trips/:id`
 - `GET /api/trips/export.xlsx` — XLSX export
 - `GET /api/trips/summary?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD[&vehicle=...]` — totals per vehicle (quantity, cost, average price, count)
+  - Returns per-vehicle `total_quantity`, `total_cost`, `total_gst`, `total_km`, `transaction_count`, `avg_price_per_liter`.
 
 Daily Mileage:
 - `GET /api/daily-mileage` — list records

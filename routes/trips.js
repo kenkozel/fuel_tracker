@@ -165,24 +165,36 @@ router.get('/summary', requireAuth, async (_req, res) => {
     const { startDate, endDate, vehicle } = _req.query;
     const pool = _req.app.get('pool');
 
-    let query = `
-      SELECT 
-        vehicle,
-        SUM(fuel_quantity_l) as total_quantity,
-        SUM(price_total) as total_cost,
-        COUNT(*) as transaction_count,
-        AVG(price_per_liter) as avg_price_per_liter
-      FROM trips
-      WHERE trip_date >= ? AND trip_date <= ?
+    // Aggregate daily driven KM from daily_mileage for the same window
+    const kmSubquery = `
+      SELECT vehicle, SUM(IFNULL(total_km, IFNULL(end_mileage - start_mileage, 0))) AS total_km
+      FROM daily_mileage
+      WHERE mileage_date >= ? AND mileage_date <= ?
+      ${vehicle ? ' AND vehicle = ?' : ''}
+      GROUP BY vehicle
     `;
-    const params = [startDate, endDate];
 
-    if (vehicle) {
-      query += ` AND vehicle = ?`;
-      params.push(vehicle);
-    }
+    // Main trips summary with joined KM totals
+    const query = `
+      SELECT 
+        t.vehicle,
+        SUM(COALESCE(t.fuel_quantity_l, 0)) AS total_quantity,
+        SUM(COALESCE(t.price_total, 0)) AS total_cost,
+        MAX(COALESCE(dm.total_km, 0)) AS total_km,
+        SUM(COALESCE(t.gst_paid, 0)) AS total_gst,
+        COUNT(*) AS transaction_count,
+        AVG(t.price_per_liter) AS avg_price_per_liter
+      FROM trips t
+      LEFT JOIN (${kmSubquery}) dm ON dm.vehicle = t.vehicle
+      WHERE t.trip_date >= ? AND t.trip_date <= ?
+      ${vehicle ? ' AND t.vehicle = ?' : ''}
+      GROUP BY t.vehicle
+      ORDER BY t.vehicle
+    `;
 
-    query += ` GROUP BY vehicle ORDER BY vehicle`;
+    const kmParams = vehicle ? [startDate, endDate, vehicle] : [startDate, endDate];
+    const tripParams = vehicle ? [startDate, endDate, vehicle] : [startDate, endDate];
+    const params = [...kmParams, ...tripParams];
 
     const [rows] = await pool.query(query, params);
 
