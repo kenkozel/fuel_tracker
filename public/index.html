@@ -19,6 +19,7 @@
     <div class="tabs" role="tablist" aria-label="Views">
       <button class="tab-button active" role="tab" aria-selected="true" aria-controls="uber-view" id="tab-uber">Uber Mileage</button>
       <button class="tab-button" role="tab" aria-selected="false" aria-controls="tracker-view" id="tab-tracker">Fuel Tracker</button>
+      <button class="tab-button" role="tab" aria-selected="false" aria-controls="reports-view" id="tab-reports">Reports</button>
     </div>
     <section class="card hidden" id="tracker-view">
       <!-- <h1>Fuel Tracker</h1> -->
@@ -64,7 +65,7 @@
             <input type="number" id="gst" name="gst" step="0.01" min="0" />
           </div>
         </div>
-        <button type="submit">Save Trip</button>
+        <button type="submit">Save</button>
         <p id="status" class="status" role="status"></p>
       </form>
 
@@ -190,6 +191,85 @@
         <button id="mileage-prev">Prev</button>
         <span id="mileage-page-info">Page 1 of 1</span>
         <button id="mileage-next">Next</button>
+      </div>
+    </section>
+
+    <!-- Reports Tab -->
+    <section class="card hidden" id="reports-view">
+      <h2 style="margin-top: 0;">Monthly Reports</h2>
+      
+      <div style="margin-bottom: 24px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #d5deeb;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; align-items: flex-end;">
+          <div>
+            <label for="report-month" style="display: block; font-weight: 500; margin-bottom: 4px; font-size: 14px;">Month & Year</label>
+            <input type="month" id="report-month" style="padding: 8px; border: 1px solid #d5deeb; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px;">
+          </div>
+          <div>
+            <label for="report-vehicle" style="display: block; font-weight: 500; margin-bottom: 4px; font-size: 14px;">Vehicle</label>
+            <select id="report-vehicle" style="padding: 8px; border: 1px solid #d5deeb; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px;">
+              <option value="">All Vehicles</option>
+              <option value="Nissan Xtrail">Nissan Xtrail</option>
+              <option value="Nissan Sentra">Nissan Sentra</option>
+              <option value="Subaru Legacy">Subaru Legacy</option>
+            </select>
+          </div>
+          <button id="generate-report-btn" style="padding: 8px 16px; background: #60a5fa; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%; font-size: 14px; white-space: nowrap;">Generate</button>
+        </div>
+      </div>
+
+      <div id="report-stats" style="display: none; margin-bottom: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px;">
+          <div style="background: white; border: 1px solid #d5deeb; border-radius: 8px; padding: 12px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #64748b;">Total Cost</h4>
+            <p id="stat-total-cost" style="margin: 0; font-size: 18px; font-weight: 700; color: #38bdf8;">$0.00</p>
+          </div>
+          <div style="background: white; border: 1px solid #d5deeb; border-radius: 8px; padding: 12px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #64748b;">Total Qty</h4>
+            <p id="stat-total-quantity" style="margin: 0; font-size: 18px; font-weight: 700; color: #38bdf8;">0.0 L</p>
+          </div>
+          <div style="background: white; border: 1px solid #d5deeb; border-radius: 8px; padding: 12px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #64748b;">Avg $/L</h4>
+            <p id="stat-avg-price" style="margin: 0; font-size: 18px; font-weight: 700; color: #38bdf8;">$0.00</p>
+          </div>
+          <div style="background: white; border: 1px solid #d5deeb; border-radius: 8px; padding: 12px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #64748b;">Count</h4>
+            <p id="stat-transaction-count" style="margin: 0; font-size: 18px; font-weight: 700; color: #38bdf8;">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="report-container" style="display: none;">
+        <h3 style="margin-top: 0; font-size: 18px;">Fuel Purchases Summary</h3>
+        <div class="report-table-wrap" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; min-width: 400px;">
+            <thead>
+              <tr style="background: #eef2ff; border-bottom: 2px solid #d5deeb;">
+                <th style="padding: 10px 8px; text-align: left; font-weight: 600; color: #0f172a; font-size: 13px;">Vehicle</th>
+                <th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #0f172a; font-size: 13px;">Qty (L)</th>
+                <th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #0f172a; font-size: 13px;">Cost</th>
+                <th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #0f172a; font-size: 13px;">$/L</th>
+                <th style="padding: 10px 8px; text-align: right; font-weight: 600; color: #0f172a; font-size: 13px;">Cnt</th>
+              </tr>
+            </thead>
+            <tbody id="report-table-body">
+            </tbody>
+            <tfoot>
+              <tr style="background: #f1f5f9; border-top: 2px solid #d5deeb; font-weight: 600;">
+                <td style="padding: 10px 8px; text-align: left; font-size: 13px;">TOTAL</td>
+                <td style="padding: 10px 8px; text-align: right; font-size: 13px;" id="footer-quantity">0.0</td>
+                <td style="padding: 10px 8px; text-align: right; font-size: 13px;" id="footer-cost">$0.00</td>
+                <td style="padding: 10px 8px; text-align: right; font-size: 13px;" id="footer-avg">$0.00</td>
+                <td style="padding: 10px 8px; text-align: right; font-size: 13px;" id="footer-count">0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div id="report-card-list" class="report-cards" style="display: none;"></div>
+      </div>
+
+      <div id="report-empty-state" style="text-align: center; padding: 40px 16px; color: #64748b;">
+        <p style="font-size: 14px; margin: 0;">Select a month and click "Generate Report" to view your fuel expenses summary</p>
       </div>
     </section>
   </main>

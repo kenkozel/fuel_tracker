@@ -159,6 +159,40 @@ router.delete('/:id', apiLimiter, requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/trips/summary - Get trips summary for a date range
+router.get('/summary', requireAuth, async (_req, res) => {
+  try {
+    const { startDate, endDate, vehicle } = _req.query;
+    const pool = _req.app.get('pool');
+
+    let query = `
+      SELECT 
+        vehicle,
+        SUM(fuel_quantity_l) as total_quantity,
+        SUM(price_total) as total_cost,
+        COUNT(*) as transaction_count,
+        AVG(price_per_liter) as avg_price_per_liter
+      FROM trips
+      WHERE trip_date >= ? AND trip_date <= ?
+    `;
+    const params = [startDate, endDate];
+
+    if (vehicle) {
+      query += ` AND vehicle = ?`;
+      params.push(vehicle);
+    }
+
+    query += ` GROUP BY vehicle ORDER BY vehicle`;
+
+    const [rows] = await pool.query(query, params);
+
+    res.json({ summary: rows });
+  } catch (err) {
+    console.error('Error fetching trip summary', err);
+    res.status(500).json({ error: 'Failed to fetch summary' });
+  }
+});
+
 // GET /api/trips/export.xlsx - Export trips to Excel
 router.get('/export.xlsx', requireAuth, async (_req, res) => {
   try {

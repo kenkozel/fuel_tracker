@@ -294,3 +294,63 @@ tbody tr:hover {
     color: #cbd5e1;
   }
 }
+
+/* Reports: table wrapper and mobile cards */
+.report-table-wrap {
+  width: 100%;
+}
+
+.report-cards {
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.report-card {
+  background: #ffffff;
+  border: 1px solid #d5deeb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 10px;
+}
+
+.report-card__header {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.report-card__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px 12px;
+}
+
+.report-card .label {
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.report-card .value {
+  text-align: left;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  /* Hide wide table on mobile; show card list instead */
+  .report-table-wrap {
+    display: none;
+  }
+
+  .report-cards {
+    display: grid;
+  }
+}

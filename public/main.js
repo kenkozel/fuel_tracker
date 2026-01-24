@@ -43,8 +43,10 @@ const tripsNextBtn = document.getElementById('trips-next');
 const tripsPageInfo = document.getElementById('trips-page-info');
 const tabTracker = document.getElementById('tab-tracker');
 const tabUber = document.getElementById('tab-uber');
+const tabReports = document.getElementById('tab-reports');
 const trackerView = document.getElementById('tracker-view');
 const uberView = document.getElementById('uber-view');
+const reportsView = document.getElementById('reports-view');
 
 // Uber Mileage elements
 const mileageForm = document.getElementById('mileage-form');
@@ -479,23 +481,177 @@ function activateTab(target) {
     tabTracker.setAttribute('aria-selected', 'true');
     tabUber.classList.remove('active');
     tabUber.setAttribute('aria-selected', 'false');
+    tabReports.classList.remove('active');
+    tabReports.setAttribute('aria-selected', 'false');
     trackerView.classList.remove('hidden');
     uberView.classList.add('hidden');
+    reportsView.classList.add('hidden');
     fetchTrips();
   } else if (target === 'uber') {
     tabUber.classList.add('active');
     tabUber.setAttribute('aria-selected', 'true');
     tabTracker.classList.remove('active');
     tabTracker.setAttribute('aria-selected', 'false');
+    tabReports.classList.remove('active');
+    tabReports.setAttribute('aria-selected', 'false');
     uberView.classList.remove('hidden');
     trackerView.classList.add('hidden');
+    reportsView.classList.add('hidden');
     fetchMileage();
+  } else if (target === 'reports') {
+    tabReports.classList.add('active');
+    tabReports.setAttribute('aria-selected', 'true');
+    tabTracker.classList.remove('active');
+    tabTracker.setAttribute('aria-selected', 'false');
+    tabUber.classList.remove('active');
+    tabUber.setAttribute('aria-selected', 'false');
+    reportsView.classList.remove('hidden');
+    trackerView.classList.add('hidden');
+    uberView.classList.add('hidden');
+    initializeReports();
   }
   localStorage.setItem('activeTab', target);
 }
 
 tabTracker.addEventListener('click', () => activateTab('tracker'));
 tabUber.addEventListener('click', () => activateTab('uber'));
+tabReports.addEventListener('click', () => activateTab('reports'));
+
+// Initialize reports tab
+function initializeReports() {
+  const monthInput = document.getElementById('report-month');
+  const generateBtn = document.getElementById('generate-report-btn');
+  
+  // Set to current month
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  monthInput.value = `${year}-${month}`;
+  
+  generateBtn.addEventListener('click', generateMonthlyReport);
+}
+
+async function generateMonthlyReport() {
+  const monthInput = document.getElementById('report-month').value;
+  const vehicleSelect = document.getElementById('report-vehicle').value;
+  
+  if (!monthInput) {
+    alert('Please select a month');
+    return;
+  }
+  
+  const [year, month] = monthInput.split('-');
+  const startDate = `${year}-${month}-01`;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${month}-${daysInMonth}`;
+  
+  try {
+    let url = `api/trips/summary?startDate=${startDate}&endDate=${endDate}`;
+    if (vehicleSelect) {
+      url += `&vehicle=${encodeURIComponent(vehicleSelect)}`;
+    }
+    
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to fetch summary');
+    
+    const data = await res.json();
+    displayReportSummary(data.summary, monthInput);
+  } catch (err) {
+    alert('Error generating report: ' + err.message);
+  }
+}
+
+function displayReportSummary(summary, monthInput) {
+  const statsDiv = document.getElementById('report-stats');
+  const tableBody = document.getElementById('report-table-body');
+  const cardList = document.getElementById('report-card-list');
+  const emptyState = document.getElementById('report-empty-state');
+  const container = document.getElementById('report-container');
+  
+  if (!summary || summary.length === 0) {
+    emptyState.style.display = 'block';
+    container.style.display = 'none';
+    statsDiv.style.display = 'none';
+    return;
+  }
+  
+  emptyState.style.display = 'none';
+  container.style.display = 'block';
+  statsDiv.style.display = 'grid';
+  cardList.style.display = 'grid';
+  
+  // Calculate totals
+  let totalCost = 0;
+  let totalQuantity = 0;
+  let totalTransactions = 0;
+  
+  tableBody.innerHTML = summary.map(row => {
+    const quantity = parseFloat(row.total_quantity) || 0;
+    const cost = parseFloat(row.total_cost) || 0;
+    const count = parseInt(row.transaction_count) || 0;
+    const avgPrice = quantity > 0 ? (cost / quantity).toFixed(3) : 0;
+    
+    totalCost += cost;
+    totalQuantity += quantity;
+    totalTransactions += count;
+    
+    return `
+      <tr style="border-bottom: 1px solid #d5deeb;">
+        <td style="padding: 10px 8px; text-align: left; font-size: 13px;">${row.vehicle}</td>
+        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">${quantity.toFixed(3)}</td>
+        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">$${cost.toFixed(2)}</td>
+        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">$${avgPrice}</td>
+        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">${count}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // Mobile-friendly cards
+  cardList.innerHTML = summary.map(row => {
+    const quantity = parseFloat(row.total_quantity) || 0;
+    const cost = parseFloat(row.total_cost) || 0;
+    const count = parseInt(row.transaction_count) || 0;
+    const avgPrice = quantity > 0 ? (cost / quantity).toFixed(3) : 0;
+
+    return `
+      <div class="report-card">
+        <div class="report-card__header">${row.vehicle}</div>
+        <div class="report-card__grid">
+          <div>
+            <div class="label">Qty (L)</div>
+            <div class="value">${quantity.toFixed(3)}</div>
+          </div>
+          <div>
+            <div class="label">Cost</div>
+            <div class="value">$${cost.toFixed(2)}</div>
+          </div>
+          <div>
+            <div class="label">Avg $/L</div>
+            <div class="value">$${avgPrice}</div>
+          </div>
+          <div>
+            <div class="label">Count</div>
+            <div class="value">${count}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  const avgPricePerLiter = totalQuantity > 0 ? (totalCost / totalQuantity).toFixed(3) : '0.00';
+  
+  // Update stats
+  document.getElementById('stat-total-cost').textContent = `$${totalCost.toFixed(2)}`;
+  document.getElementById('stat-total-quantity').textContent = `${totalQuantity.toFixed(3)} L`;
+  document.getElementById('stat-avg-price').textContent = `$${avgPricePerLiter}`;
+  document.getElementById('stat-transaction-count').textContent = totalTransactions;
+  
+  // Update footer
+  document.getElementById('footer-quantity').textContent = totalQuantity.toFixed(3);
+  document.getElementById('footer-cost').textContent = `$${totalCost.toFixed(2)}`;
+  document.getElementById('footer-avg').textContent = `$${avgPricePerLiter}`;
+  document.getElementById('footer-count').textContent = totalTransactions;
+}
 
 // Restore active tab from localStorage
 const savedTab = localStorage.getItem('activeTab') || 'uber';
