@@ -5,6 +5,7 @@ A small Node.js + Express app to log fuel purchases and daily mileage into MySQL
 ## Features
 - Fuel purchases: log date, vehicle, odometer, quantity, totals, GST.
 - Daily mileage: log start and end mileage per day and vehicle.
+- Reports: monthly summary by vehicle with totals, averages, and mobile-friendly cards.
 - Authentication: session-based login; UI exposes login only.
 - Validation: robust request validation on all write endpoints.
 - Rate limiting: login and write endpoints throttled; reads unrestricted.
@@ -59,6 +60,7 @@ The `users` table is not auto-created; create it using the SQL above.
 ## Frontend
 - Login: [fuel_tracker/public/login.html](fuel_tracker/public/login.html)
 - App: [fuel_tracker/public/index.html](fuel_tracker/public/index.html)
+- Reports tab: filter by month/year and vehicle, view totals/stats; on mobile the summary shows stacked cards for readability.
 
 If served under a subpath (e.g., `/fuel_tracker/`), the HTML uses `<base href="/fuel_tracker/">` so all asset and API requests are relative.
 
@@ -86,6 +88,7 @@ Trips:
   ```
 - `DELETE /api/trips/:id`
 - `GET /api/trips/export.xlsx` — XLSX export
+- `GET /api/trips/summary?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD[&vehicle=...]` — totals per vehicle (quantity, cost, average price, count)
 
 Daily Mileage:
 - `GET /api/daily-mileage` — list records
