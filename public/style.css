@@ -260,41 +260,6 @@ tbody tr:hover {
   cursor: not-allowed;
 }
 
-@media (max-width: 640px) {
-  .table-head {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  table, thead, tbody, th, td, tr {
-    display: block;
-  }
-
-  thead {
-    display: none;
-  }
-
-  tbody tr {
-    margin-bottom: 12px;
-    border: 1px solid #1f2937;
-    border-radius: 8px;
-    padding: 10px;
-  }
-
-  td {
-    border: none;
-    padding: 4px 0;
-  }
-
-  td::before {
-    content: attr(data-label);
-    display: inline-block;
-    width: 140px;
-    font-weight: 600;
-    color: #cbd5e1;
-  }
-}
-
 /* Reports: table wrapper and mobile cards */
 .report-table-wrap {
   width: 100%;
@@ -318,7 +283,7 @@ tbody tr:hover {
 
 .report-card__header {
   grid-column: 1 / -1;
-  margin: 0;
+  margin: 0 0 6px 0;
   font-size: 15px;
   font-weight: 700;
   color: #0f172a;
@@ -335,6 +300,7 @@ tbody tr:hover {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  margin-bottom: 2px;
 }
 
 .report-card .value {
@@ -352,5 +318,396 @@ tbody tr:hover {
 
   .report-cards {
     display: grid;
+  }
+}
+
+@media (max-width: 900px) {
+  .page {
+    gap: 20px;
+  }
+
+  .tabs {
+    gap: 6px;
+  }
+
+  .table-head {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 12px 40px;
+    gap: 16px;
+    max-width: 100%;
+  }
+
+  h1 {
+    font-size: 1.8em;
+  }
+
+  h2 {
+    font-size: 1.3em;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  .tabs {
+    gap: 4px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .form {
+    gap: 10px;
+  }
+
+  .field {
+    gap: 5px;
+  }
+
+  .field label {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  input, button, select {
+    padding: 10px 8px;
+    font-size: 16px;
+  }
+
+  .input-prefix {
+    padding: 0 10px;
+  }
+
+  .input-prefix input {
+    padding: 10px 0;
+  }
+
+  button {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .table-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .table-actions {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table th,
+  table td {
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+
+  .delete-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .pagination {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .pagination button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .report-cards {
+    gap: 10px;
+  }
+
+  .report-card {
+    padding: 12px;
+  }
+
+  .report-card__header {
+    font-size: 14px;
+  }
+
+  .report-card .value {
+    font-size: 13px;
+  }
+
+  .report-card .label {
+    font-size: 11px;
+  }
+
+  .status {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 600px) {
+  * {
+    font-size: 13px;
+  }
+
+  .page {
+    padding: 16px 8px 32px;
+    gap: 12px;
+  }
+
+  h1 {
+    font-size: 1.5em;
+    margin: 0 0 12px;
+  }
+
+  h2 {
+    font-size: 1.1em;
+    margin: 0 0 10px;
+  }
+
+  .card {
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  .tabs {
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .tab-button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .form {
+    gap: 8px;
+  }
+
+  .field {
+    gap: 4px;
+  }
+
+  .field label {
+    font-size: 12px;
+  }
+
+  input, button, select {
+    padding: 10px 8px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+
+  .input-prefix {
+    padding: 0 8px;
+    border-radius: 6px;
+  }
+
+  .prefix {
+    font-size: 12px;
+    margin-right: 3px;
+  }
+
+  button {
+    padding: 10px 12px;
+    font-size: 14px;
+    width: auto;
+  }
+
+  .table-frame {
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .table-head {
+    gap: 8px;
+  }
+
+  .table-wrap {
+    margin: -1px 0;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  table th,
+  table td {
+    padding: 6px 4px;
+  }
+
+  table th {
+    font-size: 11px;
+  }
+
+  tbody tr:hover {
+    background: #eef2ff;
+  }
+
+  .delete-btn {
+    padding: 2px 4px;
+  }
+
+  .delete-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .pagination button {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .report-table-wrap {
+    margin: 0 -4px;
+  }
+
+  .report-cards {
+    gap: 8px;
+  }
+
+  .report-card {
+    padding: 10px;
+    border-radius: 6px;
+  }
+
+  .report-card__header {
+    font-size: 13px;
+    margin: 0 0 8px;
+  }
+
+  .report-card__grid {
+    gap: 6px 10px;
+  }
+
+  .report-card .label {
+    font-size: 10px;
+  }
+
+  .report-card .value {
+    font-size: 12px;
+  }
+
+  .status {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 400px) {
+  * {
+    font-size: 12px;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  .page {
+    padding: 12px 4px 24px;
+    max-width: 100%;
+  }
+
+  h1 {
+    font-size: 1.3em;
+    margin: 0 0 10px;
+  }
+
+  h2 {
+    font-size: 1em;
+    margin: 0 0 8px;
+  }
+
+  .card {
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .tabs {
+    gap: 2px;
+    margin-bottom: 8px;
+  }
+
+  .tab-button {
+    padding: 6px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+
+  input, button, select {
+    padding: 10px 6px;
+    font-size: 16px;
+    border-radius: 4px;
+  }
+
+  .input-prefix {
+    padding: 0 6px;
+    border-radius: 4px;
+  }
+
+  .prefix {
+    font-size: 11px;
+  }
+
+  button {
+    padding: 10px 10px;
+    font-size: 13px;
+  }
+
+  table th,
+  table td {
+    padding: 4px 2px;
+  }
+
+  table th {
+    font-size: 10px;
+  }
+
+  .delete-btn {
+    padding: 2px;
+  }
+
+  .delete-btn svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .report-card {
+    padding: 8px;
+  }
+
+  .report-card__header {
+    font-size: 12px;
+  }
+
+  .report-card .label {
+    font-size: 9px;
+  }
+
+  .report-card .value {
+    font-size: 11px;
   }
 }

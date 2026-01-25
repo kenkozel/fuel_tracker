@@ -66,6 +66,8 @@ const MILEAGE_PAGE_SIZE = 8;
 let mileageRecords = [];
 let mileagePage = 1;
 
+let reportsInitialized = false;
+
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
   statusEl.style.color = isError ? '#fca5a5' : '#a7f3d0';
@@ -519,16 +521,19 @@ tabReports.addEventListener('click', () => activateTab('reports'));
 
 // Initialize reports tab
 function initializeReports() {
+  if (reportsInitialized) return;
+  reportsInitialized = true;
+
   const monthInput = document.getElementById('report-month');
   const generateBtn = document.getElementById('generate-report-btn');
-  
-  // Set to current month
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  monthInput.value = `${year}-${month}`;
-  
+
+  // Restore saved inputs or default to current month
+  restoreReportState(monthInput);
+
   generateBtn.addEventListener('click', generateMonthlyReport);
+
+  // Restore last generated summary if present
+  restoreReportResult();
 }
 
 async function generateMonthlyReport() {
@@ -555,6 +560,12 @@ async function generateMonthlyReport() {
     if (!res.ok) throw new Error('Failed to fetch summary');
     
     const data = await res.json();
+
+    // Persist last-used inputs
+    saveReportState({ month: monthInput, vehicle: vehicleSelect });
+
+    // Persist and render result
+    saveReportResult({ summary: data.summary });
     displayReportSummary(data.summary, monthInput);
   } catch (err) {
     alert('Error generating report: ' + err.message);
@@ -572,6 +583,7 @@ function displayReportSummary(summary, monthInput) {
     emptyState.style.display = 'block';
     container.style.display = 'none';
     statsDiv.style.display = 'none';
+    cardList.style.display = 'none';
     return;
   }
   
@@ -602,14 +614,14 @@ function displayReportSummary(summary, monthInput) {
     totalTransactions += count;
     
     return `
-      <tr style="border-bottom: 1px solid #d5deeb;">
-        <td style="padding: 10px 8px; text-align: left; font-size: 13px;">${row.vehicle}</td>
-        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">${quantity.toFixed(3)}</td>
-        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">$${cost.toFixed(2)}</td>
-        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">$${gst.toFixed(2)}</td>
-        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">${km.toFixed(1)}</td>
-        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">$${avgPrice}</td>
-        <td style="padding: 10px 8px; text-align: right; font-size: 13px;">${count}</td>
+      <tr>
+        <td style="text-align: left;">${row.vehicle}</td>
+        <td style="text-align: right;">${quantity.toFixed(3)}</td>
+        <td style="text-align: right;">$${cost.toFixed(2)}</td>
+        <td style="text-align: right;">$${gst.toFixed(2)}</td>
+        <td style="text-align: right;">${km.toFixed(1)}</td>
+        <td style="text-align: right;">$${avgPrice}</td>
+        <td style="text-align: right;">${count}</td>
       </tr>
     `;
   }).join('');
@@ -678,4 +690,64 @@ function displayReportSummary(summary, monthInput) {
 // Restore active tab from localStorage
 const savedTab = localStorage.getItem('activeTab') || 'uber';
 activateTab(savedTab);
+
+// ----- Report persistence helpers -----
+function saveReportState({ month, vehicle }) {
+  try {
+    if (month !== undefined) localStorage.setItem('fuel_reportMonth', month);
+    if (vehicle !== undefined) localStorage.setItem('fuel_reportVehicle', vehicle);
+  } catch (e) {
+    console.warn('Could not persist report state', e);
+  }
+}
+
+function restoreReportState(monthInputEl) {
+  try {
+    const savedMonth = localStorage.getItem('fuel_reportMonth');
+    const savedVehicle = localStorage.getItem('fuel_reportVehicle');
+    const vehicleSelect = document.getElementById('report-vehicle');
+
+    if (monthInputEl) {
+      if (savedMonth) {
+        monthInputEl.value = savedMonth;
+      } else {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        monthInputEl.value = `${year}-${month}`;
+      }
+    }
+
+    if (vehicleSelect && savedVehicle !== null) {
+      vehicleSelect.value = savedVehicle;
+    }
+  } catch (e) {
+    console.warn('Could not restore report state', e);
+  }
+}
+
+function saveReportResult(payload) {
+  try {
+    localStorage.setItem('fuel_reportResult', JSON.stringify(payload || {}));
+  } catch (e) {
+    console.warn('Could not persist report result', e);
+  }
+}
+
+function restoreReportResult() {
+  try {
+    const raw = localStorage.getItem('fuel_reportResult');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.summary)) {
+      displayReportSummary(parsed.summary);
+    }
+    // Clean up old cross-app keys if present
+    localStorage.removeItem('reportResult');
+    localStorage.removeItem('reportMonth');
+    localStorage.removeItem('reportVehicle');
+  } catch (e) {
+    console.warn('Could not restore report result', e);
+  }
+}
 } // End of initialize() function
