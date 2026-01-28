@@ -1,23 +1,17 @@
-// Check authentication on page load
+// Check authentication on page load (session-based)
 async function checkAuth() {
   try {
     const res = await fetch('api/auth/status');
     const data = await res.json();
-    
     if (!data.authenticated) {
       window.location.href = 'login.html';
       return false;
     }
-
-    // Display username
-    document.getElementById('username-display').textContent = 'Welcome, ' + data.username;
-    
-    // Setup logout button
+    document.getElementById('username-display').textContent = `Welcome, ${data.username || ''}!`;
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await fetch('api/logout', { method: 'POST' });
       window.location.href = 'login.html';
     });
-
     return true;
   } catch (err) {
     window.location.href = 'login.html';
@@ -26,7 +20,7 @@ async function checkAuth() {
 }
 
 // Initialize auth before loading data
-checkAuth().then(authed => {
+checkAuth().then((authed) => {
   if (authed) {
     initialize();
   }
@@ -101,24 +95,10 @@ async function fetchTrips() {
     const res = await fetch('api/trips');
     if (!res.ok) throw new Error('Failed to fetch trips');
     const trips = await res.json();
-    
+    // ...existing code...
     // Sort by date descending (latest first)
     trips.sort((a, b) => new Date(b.trip_date) - new Date(a.trip_date));
-
-    // Compute totals
-    let totalQuantity = 0;
-    let totalPrice = 0;
-    let totalGst = 0;
-    trips.forEach((trip) => {
-      totalQuantity += parseFloat(trip.fuel_quantity_l) || 0;
-      totalPrice += parseFloat(trip.price_total) || 0;
-      totalGst += parseFloat(trip.gst_paid) || 0;
-    });
-
-    document.getElementById('total-quantity').textContent = totalQuantity.toFixed(3);
-    document.getElementById('total-price').textContent = `$${totalPrice.toFixed(2)}`;
-    document.getElementById('total-gst').textContent = `$${totalGst.toFixed(2)}`;
-
+    // ...existing code...
     // Store and render paginated table
     tripsRecords = trips;
     tripsPage = 1;
@@ -133,48 +113,10 @@ async function fetchMileage() {
     const res = await fetch('api/daily-mileage');
     if (!res.ok) throw new Error('Failed to fetch mileage');
     const records = await res.json();
-    
+    // ...existing code...
     // Sort by date descending (latest first)
     records.sort((a, b) => new Date(b.mileage_date) - new Date(a.mileage_date));
-
-    // Populate the record select dropdown with incomplete records
-    const recordSelect = document.getElementById('record-id');
-    recordSelect.innerHTML = '<option value="">-- Select --</option>';
-    
-    const totalsByVehicle = {
-      'Nissan Xtrail': 0,
-      'Nissan Sentra': 0,
-      'Subaru Legacy': 0
-    };
-
-    records.forEach((record) => {
-      // Only add incomplete records (where end_mileage is null)
-      if (record.end_mileage === null) {
-        const option = document.createElement('option');
-        option.value = record.id;
-        option.textContent = `${record.mileage_date.split('T')[0]} - Start: ${record.start_mileage} km`;
-        recordSelect.appendChild(option);
-      }
-
-      const totalKmVal = parseFloat(record.total_km);
-      const vehicleName = record.vehicle || 'Nissan Xtrail';
-      if (Number.isFinite(totalKmVal) && vehicleName in totalsByVehicle) {
-        totalsByVehicle[vehicleName] += totalKmVal;
-      }
-    });
-    // Update totals by vehicle
-    const totalEls = {
-      'Nissan Xtrail': document.getElementById('total-nissan-xtrail'),
-      'Nissan Sentra': document.getElementById('total-nissan-sentra'),
-      'Subaru Legacy': document.getElementById('total-subaru-legacy')
-    };
-    Object.entries(totalEls).forEach(([name, el]) => {
-      if (el) {
-        const total = totalsByVehicle[name] || 0;
-        el.textContent = total.toFixed(1);
-      }
-    });
-
+    // ...existing code...
     // Store and render paginated table
     mileageRecords = records;
     mileagePage = 1;
@@ -194,7 +136,7 @@ form.addEventListener('submit', async (e) => {
     fuelQuantity: document.getElementById('quantity').value,
     priceTotal: document.getElementById('total').value,
     pricePerLiter: document.getElementById('ppl').value,
-    gstPaid: document.getElementById('gst').value,
+    taxPaid: document.getElementById('tax').value,
     vehicle: document.getElementById('vehicle').value
   };
 
@@ -252,7 +194,7 @@ function renderTripsPage() {
       <td data-label="Quantity (L)">${trip.fuel_quantity_l}</td>
       <td data-label="Total">$${trip.price_total}</td>
       <td data-label="Price/L">$${trip.price_per_liter}</td>
-      <td data-label="GST Paid">$${trip.gst_paid || 0}</td>
+      <td data-label="Tax Paid">$${trip.tax_paid || 0}</td>
       <td data-label="Action">
         <button class="delete-btn" data-type="trip" data-id="${trip.id}" aria-label="Delete trip">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -596,20 +538,20 @@ function displayReportSummary(summary, monthInput) {
   let totalCost = 0;
   let totalQuantity = 0;
   let totalTransactions = 0;
-  let totalGst = 0;
+  let totalTax = 0;
   let totalKm = 0;
   
   tableBody.innerHTML = summary.map(row => {
     const quantity = parseFloat(row.total_quantity) || 0;
     const cost = parseFloat(row.total_cost) || 0;
-    const gst = parseFloat(row.total_gst) || 0;
+    const tax = parseFloat(row.total_tax) || 0;
     const km = parseFloat(row.total_km) || 0;
     const count = parseInt(row.transaction_count) || 0;
     const avgPrice = quantity > 0 ? (cost / quantity).toFixed(3) : 0;
     
     totalCost += cost;
     totalQuantity += quantity;
-    totalGst += gst;
+    totalTax += tax;
     totalKm += km;
     totalTransactions += count;
     
@@ -618,7 +560,7 @@ function displayReportSummary(summary, monthInput) {
         <td style="text-align: left;">${row.vehicle}</td>
         <td style="text-align: right;">${quantity.toFixed(3)}</td>
         <td style="text-align: right;">$${cost.toFixed(2)}</td>
-        <td style="text-align: right;">$${gst.toFixed(2)}</td>
+        <td style="text-align: right;">$${tax.toFixed(2)}</td>
         <td style="text-align: right;">${km.toFixed(1)}</td>
         <td style="text-align: right;">$${avgPrice}</td>
         <td style="text-align: right;">${count}</td>
@@ -630,7 +572,7 @@ function displayReportSummary(summary, monthInput) {
   cardList.innerHTML = summary.map(row => {
     const quantity = parseFloat(row.total_quantity) || 0;
     const cost = parseFloat(row.total_cost) || 0;
-    const gst = parseFloat(row.total_gst) || 0;
+    const tax = parseFloat(row.total_tax) || 0;
     const km = parseFloat(row.total_km) || 0;
     const count = parseInt(row.transaction_count) || 0;
     const avgPrice = quantity > 0 ? (cost / quantity).toFixed(3) : 0;
@@ -648,8 +590,8 @@ function displayReportSummary(summary, monthInput) {
             <div class="value">$${cost.toFixed(2)}</div>
           </div>
           <div>
-            <div class="label">GST</div>
-            <div class="value">$${gst.toFixed(2)}</div>
+            <div class="label">Tax</div>
+            <div class="value">$${tax.toFixed(2)}</div>
           </div>
           <div>
             <div class="label">KM</div>
@@ -674,14 +616,14 @@ function displayReportSummary(summary, monthInput) {
   document.getElementById('stat-total-cost').textContent = `$${totalCost.toFixed(2)}`;
   document.getElementById('stat-total-quantity').textContent = `${totalQuantity.toFixed(3)} L`;
   document.getElementById('stat-total-km').textContent = `${totalKm.toFixed(1)} km`;
-  document.getElementById('stat-total-gst').textContent = `$${totalGst.toFixed(2)}`;
+  document.getElementById('stat-total-tax').textContent = `$${totalTax.toFixed(2)}`;
   document.getElementById('stat-avg-price').textContent = `$${avgPricePerLiter}`;
   document.getElementById('stat-transaction-count').textContent = totalTransactions;
   
   // Update footer
   document.getElementById('footer-quantity').textContent = totalQuantity.toFixed(3);
   document.getElementById('footer-cost').textContent = `$${totalCost.toFixed(2)}`;
-  document.getElementById('footer-gst').textContent = `$${totalGst.toFixed(2)}`;
+  document.getElementById('footer-tax').textContent = `$${totalTax.toFixed(2)}`;
   document.getElementById('footer-km').textContent = totalKm.toFixed(1);
   document.getElementById('footer-avg').textContent = `$${avgPricePerLiter}`;
   document.getElementById('footer-count').textContent = totalTransactions;

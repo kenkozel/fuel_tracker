@@ -55,7 +55,7 @@ async function ensureTable() {
       fuel_quantity_l DECIMAL(10,3) NOT NULL,
       price_total DECIMAL(10,2) NOT NULL,
       price_per_liter DECIMAL(10,3) NOT NULL,
-      gst_paid DECIMAL(10,2) DEFAULT 0,
+      tax_paid DECIMAL(10,2) DEFAULT 0,
       start_mileage DECIMAL(10,1) DEFAULT NULL,
       vehicle VARCHAR(50) DEFAULT 'Nissan Xtrail',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

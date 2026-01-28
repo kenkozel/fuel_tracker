@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { apiLimiter } = require('../middleware/rateLimiters');
+const { requireAuth } = require('../middleware/requireAuth');
 
 const router = express.Router();
 
@@ -11,15 +12,6 @@ function handleValidationErrors(req, res, next) {
     return res.status(400).json({ error: errors.array()[0].msg });
   }
   next();
-}
-
-// Middleware to check authentication
-function requireAuth(req, res, next) {
-  if (req.session && req.session.userId) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Not authenticated' });
-  }
 }
 
 // Helper function to convert values to numbers
@@ -66,6 +58,7 @@ router.get('/', requireAuth, async (_req, res) => {
 // POST /api/daily-mileage - Create a new daily mileage record
 router.post('/',
   apiLimiter,
+  requireAuth,
   body('date')
     .isISO8601()
     .withMessage('Invalid date format'),
@@ -81,7 +74,6 @@ router.post('/',
     .isLength({ max: 50 })
     .withMessage('Vehicle name must not exceed 50 characters'),
   handleValidationErrors,
-  requireAuth,
   async (req, res) => {
     try {
       const { date, startMileage, endMileage, vehicle } = req.body || {};
@@ -105,7 +97,6 @@ router.post('/',
         VALUES (?, ?, ?, ?)
       `;
       const values = [date, start, finalEnd, vehicle || 'Nissan Xtrail'];
-
       const [result] = await pool.execute(sql, values);
       const totalKm = finalEnd !== null ? finalEnd - start : null;
 

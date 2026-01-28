@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { apiLimiter } = require('../middleware/rateLimiters');
+const { requireAuth } = require('../middleware/requireAuth');
 
 const router = express.Router();
 
@@ -11,15 +12,6 @@ function handleValidationErrors(req, res, next) {
     return res.status(400).json({ error: errors.array()[0].msg });
   }
   next();
-}
-
-// Middleware to check authentication
-function requireAuth(req, res, next) {
-  if (req.session && req.session.userId) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Not authenticated' });
-  }
 }
 
 // Helper function to convert values to numbers
@@ -54,7 +46,7 @@ router.get('/', requireAuth, async (_req, res) => {
   try {
     const pool = _req.app.get('pool');
     const [rows] = await pool.query(
-      'SELECT id, trip_date, odometer_km, fuel_quantity_l, price_total, price_per_liter, gst_paid, start_mileage, vehicle, created_at FROM trips ORDER BY trip_date DESC, id DESC'
+      'SELECT id, trip_date, odometer_km, fuel_quantity_l, price_total, price_per_liter, tax_paid, start_mileage, vehicle, created_at FROM trips ORDER BY trip_date DESC, id DESC'
     );
     res.json(rows);
   } catch (err) {
@@ -66,6 +58,7 @@ router.get('/', requireAuth, async (_req, res) => {
 // POST /api/trips - Create a new trip
 router.post('/',
   apiLimiter,
+  requireAuth,
   body('date')
     .isISO8601()
     .withMessage('Invalid date format'),
@@ -81,10 +74,10 @@ router.post('/',
   body('pricePerLiter')
     .isFloat({ min: 0 })
     .withMessage('Price per liter must be a positive number'),
-  body('gstPaid')
+  body('taxPaid')
     .optional()
     .isFloat({ min: 0 })
-    .withMessage('GST must be a positive number'),
+    .withMessage('Tax must be a positive number'),
   body('startMileage')
     .optional()
     .isFloat({ min: 0 })
@@ -94,15 +87,14 @@ router.post('/',
     .isLength({ max: 50 })
     .withMessage('Vehicle name must not exceed 50 characters'),
   handleValidationErrors,
-  requireAuth,
   async (req, res) => {
     try {
-      const { date, odometerKm, fuelQuantity, priceTotal, pricePerLiter, gstPaid, startMileage, vehicle } = req.body || {};
+      const { date, odometerKm, fuelQuantity, priceTotal, pricePerLiter, taxPaid, startMileage, vehicle } = req.body || {};
       const odometer = toNumber(odometerKm);
       const quantity = toNumber(fuelQuantity);
       const total = toNumber(priceTotal);
       let ppl = toNumber(pricePerLiter);
-      const gst = toNumber(gstPaid) || 0;
+      const tax = toNumber(taxPaid) || 0;
       const startMile = startMileage ? toNumber(startMileage) : null;
 
       if (!date || Number.isNaN(odometer) || Number.isNaN(quantity) || Number.isNaN(total)) {
@@ -119,14 +111,12 @@ router.post('/',
 
       const pool = req.app.get('pool');
       const sql = `
-        INSERT INTO trips (trip_date, odometer_km, fuel_quantity_l, price_total, price_per_liter, gst_paid, start_mileage, vehicle)
+        INSERT INTO trips (trip_date, odometer_km, fuel_quantity_l, price_total, price_per_liter, tax_paid, start_mileage, vehicle)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [date, odometer, quantity, total, ppl, gst, startMile, vehicle || 'Nissan Xtrail'];
-
+      const values = [date, odometer, quantity, total, ppl, tax, startMile, vehicle || 'Nissan Xtrail'];
       const [result] = await pool.execute(sql, values);
-
-      res.status(201).json({ id: result.insertId, trip_date: date, odometer_km: odometer, fuel_quantity_l: quantity, price_total: total, price_per_liter: ppl, gst_paid: gst, start_mileage: startMile, vehicle: vehicle || 'Nissan Xtrail' });
+      res.status(201).json({ id: result.insertId });
     } catch (err) {
       console.error('Error creating trip', err);
       res.status(500).json({ error: 'Failed to create trip' });
@@ -181,7 +171,7 @@ router.get('/summary', requireAuth, async (_req, res) => {
         SUM(COALESCE(t.fuel_quantity_l, 0)) AS total_quantity,
         SUM(COALESCE(t.price_total, 0)) AS total_cost,
         MAX(COALESCE(dm.total_km, 0)) AS total_km,
-        SUM(COALESCE(t.gst_paid, 0)) AS total_gst,
+        SUM(COALESCE(t.tax_paid, 0)) AS total_tax,
         COUNT(*) AS transaction_count,
         AVG(t.price_per_liter) AS avg_price_per_liter
       FROM trips t
@@ -210,7 +200,7 @@ router.get('/export.xlsx', requireAuth, async (_req, res) => {
   try {
     const pool = _req.app.get('pool');
     const [rows] = await pool.query(
-      'SELECT trip_date, vehicle, odometer_km, fuel_quantity_l, price_total, price_per_liter, gst_paid, start_mileage FROM trips ORDER BY trip_date DESC, id DESC'
+      'SELECT trip_date, vehicle, odometer_km, fuel_quantity_l, price_total, price_per_liter, tax_paid, start_mileage FROM trips ORDER BY trip_date DESC, id DESC'
     );
 
     const data = rows.map((row) => ({
@@ -220,7 +210,7 @@ router.get('/export.xlsx', requireAuth, async (_req, res) => {
       fuel_quantity_l: row.fuel_quantity_l,
       price_total: row.price_total,
       price_per_liter: row.price_per_liter,
-      gst_paid: row.gst_paid,
+      tax_paid: row.tax_paid,
       start_mileage: row.start_mileage
     }));
 
@@ -234,7 +224,7 @@ router.get('/export.xlsx', requireAuth, async (_req, res) => {
         { header: 'Quantity (L)', key: 'fuel_quantity_l', width: 14 },
         { header: 'Total', key: 'price_total', width: 12 },
         { header: 'Price/L', key: 'price_per_liter', width: 12 },
-        { header: 'GST Paid', key: 'gst_paid', width: 12 },
+        { header: 'Tax Paid', key: 'tax_paid', width: 12 },
         { header: 'Start Mileage', key: 'start_mileage', width: 14 }
       ],
       data,

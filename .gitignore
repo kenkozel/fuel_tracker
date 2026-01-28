@@ -19,3 +19,8 @@ Thumbs.db
 # Builds/outputs
 coverage/
 dist/
+
+# secret files
+verify_supabase_sample.js
+csv_exports
+export_all_tables.sh

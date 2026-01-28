@@ -33,15 +33,12 @@ router.post('/register',
       if (!username || !password) {
         return res.status(400).json({ error: 'Username and password required' });
       }
-
       const pool = req.app.get('pool');
-
       // Check if user exists
       const [existing] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
       if (existing.length > 0) {
         return res.status(400).json({ error: 'Username already exists' });
       }
-
       // Hash password and create user
       const hashedPassword = await bcrypt.hash(password, 10);
       await pool.query('INSERT INTO users (username, password_hash) VALUES (?, ?)', [username, hashedPassword]);
@@ -70,22 +67,18 @@ router.post('/login',
       if (!username || !password) {
         return res.status(400).json({ error: 'Username and password required' });
       }
-
       const pool = req.app.get('pool');
-
       // Find user
       const [users] = await pool.query('SELECT id, password_hash FROM users WHERE username = ?', [username]);
       if (users.length === 0) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
-
       // Check password
       const user = users[0];
       const passwordMatch = await bcrypt.compare(password, user.password_hash);
       if (!passwordMatch) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
-
       // Set session
       req.session.userId = user.id;
       req.session.username = username;

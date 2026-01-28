@@ -17,7 +17,7 @@
   </header>
   <main class="page">
     <div class="tabs" role="tablist" aria-label="Views">
-      <button class="tab-button active" role="tab" aria-selected="true" aria-controls="uber-view" id="tab-uber">Uber Mileage</button>
+      <button class="tab-button active" role="tab" aria-selected="true" aria-controls="uber-view" id="tab-uber">Daily Mileage</button>
       <button class="tab-button" role="tab" aria-selected="false" aria-controls="tracker-view" id="tab-tracker">Fuel Tracker</button>
       <button class="tab-button" role="tab" aria-selected="false" aria-controls="reports-view" id="tab-reports">Reports</button>
     </div>
@@ -59,10 +59,10 @@
           </div>
         </div>
         <div class="field">
-          <label for="gst">GST Paid</label>
+          <label for="tax">Tax Paid</label>
           <div class="input-prefix">
             <span class="prefix">$</span>
-            <input type="number" id="gst" name="gst" step="0.01" min="0" />
+            <input type="number" id="tax" name="tax" step="0.01" min="0" />
           </div>
         </div>
         <button type="submit">Save</button>
@@ -85,7 +85,7 @@
               <th>Quantity (L)</th>
               <th>Total</th>
               <th>Price/L</th>
-              <th>GST Paid</th>
+              <th>Tax Paid</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -96,7 +96,7 @@
               <td data-label="Total Quantity"><strong id="total-quantity">0</strong></td>
               <td data-label="Total Price"><strong id="total-price">$0</strong></td>
               <td></td>
-              <td data-label="Total GST"><strong id="total-gst">$0</strong></td>
+              <td data-label="Total Tax"><strong id="total-tax">$0</strong></td>
               <td></td>
             </tr>
           </tfoot>
@@ -232,8 +232,8 @@
             <p id="stat-total-km" style="margin: 0; font-size: 18px; font-weight: 700; color: #38bdf8;">0</p>
           </div>
           <div style="background: white; border: 1px solid #d5deeb; border-radius: 8px; padding: 12px;">
-            <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #64748b;">Total GST</h4>
-            <p id="stat-total-gst" style="margin: 0; font-size: 18px; font-weight: 700; color: #38bdf8;">$0.00</p>
+            <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #64748b;">Total Tax</h4>
+            <p id="stat-total-tax" style="margin: 0; font-size: 18px; font-weight: 700; color: #38bdf8;">$0.00</p>
           </div>
           <div style="background: white; border: 1px solid #d5deeb; border-radius: 8px; padding: 12px;">
             <h4 style="margin: 0 0 8px 0; font-size: 12px; color: #64748b;">Avg $/L</h4>
@@ -256,7 +256,7 @@
                   <th style="text-align: left;">Vehicle</th>
                   <th style="text-align: right;">Qty (L)</th>
                   <th style="text-align: right;">Cost</th>
-                  <th style="text-align: right;">GST</th>
+                  <th style="text-align: right;">Tax</th>
                   <th style="text-align: right;">KM</th>
                   <th style="text-align: right;">$/L</th>
                   <th style="text-align: right;">Cnt</th>
@@ -269,7 +269,7 @@
                   <td style="text-align: left;">TOTAL</td>
                   <td style="text-align: right;" id="footer-quantity">0.0</td>
                   <td style="text-align: right;" id="footer-cost">$0.00</td>
-                  <td style="text-align: right;" id="footer-gst">$0.00</td>
+                  <td style="text-align: right;" id="footer-tax">$0.00</td>
                   <td style="text-align: right;" id="footer-km">0</td>
                   <td style="text-align: right;" id="footer-avg">$0.00</td>
                   <td style="text-align: right;" id="footer-count">0</td>
